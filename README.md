@@ -47,8 +47,24 @@ venv\Scripts\activate
 
 4. Install dependencies:
 ```bash
+# Upgrade pip first
 pip install --upgrade pip
+
+# Install all requirements from requirements.txt
 pip install -r requirements.txt
+```
+
+**Required packages:**
+- `numpy` >= 1.20.0 - Numerical computations
+- `scipy` >= 1.7.0 - Scientific computing
+- `pandas` >= 1.3.0 - Data manipulation
+- `scikit-learn` >= 1.0.0 - Machine learning utilities
+- `tensorly` >= 0.8.0 - Tensor decomposition
+- `openpyxl` >= 3.0.0 - Excel file reading
+
+**Verify installation:**
+```bash
+python -c "import numpy, scipy, pandas, sklearn, tensorly, openpyxl; print('All packages installed successfully!')"
 ```
 
 ## Usage
