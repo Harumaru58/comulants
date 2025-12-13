@@ -1,28 +1,16 @@
-# Cumulant Tensor Model
+# Moment Tensor Decomposition
 
-A Python implementation for tensor decomposition of biomarker data using multiple approaches:
-- **Cumulant tensor model**: 3-way tensors (patients × biomarkers × cumulants) with generative latent variable models
+A Python implementation for tensor decomposition of biomarker data using moment tensor decomposition:
 - **Moment tensor decomposition**: 3rd and 4th-order empirical moment tensors for group-level analysis
-- **Symmetric tensor decomposition**: 28×28×28 symmetric tensors per patient
 
 ## Overview
 
-This project provides several tensor decomposition approaches for biomarker data:
+This project provides tensor decomposition approaches for biomarker data:
 
-### 1. Cumulant Tensor Model
-- Each patient has a **latent biomarker state** `z_i` drawn from a distribution
-- The distribution is **parameterized by cumulants** `κ = (κ₁, κ₂, κ₃, κ₄)`
-- Observed biomarkers are generated from this latent state
-- Result: **3-way tensor** `patients × biomarkers × cumulants`
-
-### 2. Moment Tensor Decomposition
+### Moment Tensor Decomposition
 - Computes **3rd or 4th-order empirical moments** for each patient group
 - Decomposes moment tensors to identify biomarker interaction patterns
 - Group-level analysis to compare disease states
-
-### 3. Symmetric Tensor Per Patient
-- Creates **28×28×28 symmetric tensors** for each patient
-- Captures third-order biomarker interactions at individual level
 
 ## Installation
 
@@ -79,36 +67,7 @@ python -c "import numpy, scipy, pandas, sklearn, tensorly, openpyxl, matplotlib,
 
 ## Usage
 
-### 1. Cumulant Tensor Model
-
-Run the main script to process the CSV data and generate the cumulant tensor:
-
-```bash
-python cumulant_tensor_model.py
-```
-
-**Programmatic usage:**
-```python
-from cumulant_tensor_model import parse_csf_data, LatentCumulantTensorModel
-
-# Load data
-X, biomarkers, metadata = parse_csf_data("NIpanel_msclin_ATNsharp_20241205(1).csv")
-
-# Initialize model
-model = LatentCumulantTensorModel(n_cumulants=4)
-
-# Fit generative model (recommended)
-tensor = model.fit_generative(X, latent_dim=3)
-
-# Perform CP decomposition
-cp_result = model.decompose_cp(rank=5)
-
-# Create and decompose symmetric biomarker interaction tensor
-sym_tensor = model.create_symmetric_biomarker_tensor(X, mode='covariance')
-sym_result = model.decompose_symmetric(sym_tensor, rank=5, method='cp')
-```
-
-### 2. Moment Tensor Decomposition (Group-Level)
+### Moment Tensor Decomposition (Group-Level)
 
 **3rd-order moments:**
 ```bash
@@ -137,23 +96,11 @@ Processed 4 groups
 Mean error: 1.8893 | Min: 1.3016 | Max: 2.7271
 ```
 
-### 3. Symmetric Tensor Per Patient
+### Analysis Tools
 
-Create 28×28×28 symmetric tensors for each patient:
+The `analyze_decomposition.py` script provides comprehensive analysis tools to interpret and compare tensor decomposition results across patient groups. It helps identify biomarker interaction patterns, shared vs group-specific features, and biomarker modules.
 
-```bash
-python symmetric_tensor_per_patient.py
-```
-
-This script:
-- Creates a symmetric 28×28×28 tensor for each patient
-- Performs tensor decomposition (CP or Tucker)
-- Analyzes biomarker interaction patterns at individual level
-
-### 4. Analysis Tools
-
-Analyze and compare decomposition results across groups:
-
+**Basic usage:**
 ```python
 from analyze_decomposition import generate_analysis_report, print_analysis_summary
 from moments_3rd_order import main as moments_3rd_main
@@ -168,12 +115,48 @@ report = generate_analysis_report(decomps, biomarker_names=None)
 print_analysis_summary(report, biomarker_names)
 ```
 
-**Analysis capabilities:**
-- Compare factor loadings across groups
-- Identify shared vs group-specific biomarker patterns
-- Cluster biomarkers into modules
-- Compute group similarity matrices
-- Visualize results (heatmaps, bar plots)
+**Main functions:**
+
+1. **`compare_factors_across_groups(decomps, top_n=10)`**
+   - Compares factor loadings across groups to identify shared vs group-specific patterns
+   - Computes group similarity using cosine similarity on the first component
+   - Identifies top N biomarkers per component for each group
+   - Finds biomarkers that appear across multiple groups (shared) vs those unique to specific groups
+
+2. **`analyze_component_structure(decomps, biomarker_names=None)`**
+   - Analyzes the structure of each component within groups
+   - Identifies top positive and negative loadings per component
+   - Computes component magnitude and sparsity
+   - Records component weights and relative importance
+
+3. **`cluster_biomarkers_by_factors(decomps, n_clusters=5)`**
+   - Clusters biomarkers into modules based on their loading patterns across groups
+   - Uses K-means clustering to identify biomarkers that behave similarly
+   - Helps discover biomarker modules (e.g., "Complement module", "APOE module")
+
+4. **`visualize_group_comparison(analysis_results, biomarker_names=None, save_path=None)`**
+   - Creates visualizations comparing groups:
+     - **Similarity matrix heatmap**: Shows how similar groups are based on their first component
+     - **Biomarker frequency chart**: Shows how often each biomarker appears across groups
+
+5. **`generate_analysis_report(decomps, biomarker_names=None)`**
+   - Generates a comprehensive analysis report combining all analyses
+   - Compiles summary statistics (number of groups, mean error, etc.)
+   - Returns a complete report dictionary with all analysis results
+
+6. **`print_analysis_summary(report, biomarker_names=None)`**
+   - Prints a human-readable summary including:
+     - Summary statistics
+     - Group similarities (pairwise comparisons)
+     - Top biomarkers per group
+     - Shared biomarkers across groups
+
+**What you can discover:**
+- **Shared patterns**: Biomarkers important across multiple groups
+- **Group-specific patterns**: Biomarkers unique to certain disease states
+- **Biomarker modules**: Clusters of biomarkers that interact together
+- **Group similarities**: Which patient groups have similar biomarker patterns
+- **Component structure**: Which biomarkers drive each component in each group
 
 ## Data Format
 
@@ -191,34 +174,6 @@ CU_A-T-;3/3;w;49;csf109;51,02;0,00;52,55;...
 
 ## Model Details
 
-### Cumulant Tensor Model
-
-**Generative Model:**
-```
-x_ij = f(z_i, β_j) + ε_ij
-```
-
-where:
-- `z_i ~ p(z | κ_i)` is the latent biomarker state for patient i
-- `κ_i = (κ₁, κ₂, κ₃, κ₄)` are cumulants parameterizing the distribution
-- `β_j` are biomarker loadings
-- `x_ij` are observed biomarker values
-
-**Tensor Structure:**
-- **Dimension 0 (Patients)**: Each patient's biomarker state distribution
-- **Dimension 1 (Biomarkers)**: Different biomarker measurements
-- **Dimension 2 (Cumulants)**: Statistical moments (mean, variance, skewness, kurtosis)
-
-**CP Decomposition:**
-```
-T ≈ Σᵣ aᵣ ⊗ bᵣ ⊗ cᵣ
-```
-
-where:
-- `aᵣ`: Patient factors (patient phenotypes)
-- `bᵣ`: Biomarker factors (biomarker modules)
-- `cᵣ`: Cumulant factors (distributional signatures)
-
 ### Moment Tensor Decomposition
 
 **3rd-order moments:**
@@ -230,12 +185,6 @@ where:
 - Computes `M[i,j,k,l] = E[(x_i - μ_i)(x_j - μ_j)(x_k - μ_k)(x_l - μ_l)]`
 - Creates symmetric 28×28×28×28 tensor per group
 - Captures higher-order interactions
-
-### Symmetric Tensor Per Patient
-
-- Creates 28×28×28 symmetric tensor for each patient
-- Represents third-order biomarker interactions
-- Uses Tucker decomposition (better reconstruction than CP for symmetric tensors)
 
 ## What Can You Discover?
 
@@ -266,10 +215,8 @@ comulants/
 ├── README.md
 ├── requirements.txt
 ├── LICENSE
-├── cumulant_tensor_model.py          # Cumulant tensor model
 ├── moments_3rd_order.py              # 3rd-order moment decomposition
 ├── moments_4th_order.py              # 4th-order moment decomposition
-├── symmetric_tensor_per_patient.py   # Per-patient symmetric tensors
 ├── analyze_decomposition.py          # Analysis and comparison tools
 ├── NIpanel_msclin_ATNsharp_20241205(1).csv  # Data file
 ├── data.xlsx                         # Excel data file
@@ -278,28 +225,42 @@ comulants/
 
 ## Available Methods
 
-### LatentCumulantTensorModel
-1. **`fit(X)`** - Direct cumulant estimation using method of moments
-2. **`fit_generative(X, latent_dim=3)`** - Generative latent variable model (recommended)
-3. **`fit_mixture(X, n_components=3)`** - Gaussian mixture model approach
-4. **`create_symmetric_biomarker_tensor(X, mode='covariance')`** - Create symmetric biomarker interaction tensor
-5. **`decompose_symmetric(symmetric_tensor, rank=5, method='cp')`** - Decompose symmetric tensor
-6. **`decompose_cp(rank=5)`** - CP decomposition of cumulant tensor
-7. **`generate_samples(n_samples=100)`** - Generate synthetic data
+### Analysis Functions (`analyze_decomposition.py`)
 
-### Analysis Functions
-1. **`compare_factors_across_groups(decomps)`** - Compare factor loadings
-2. **`analyze_component_structure(decomps)`** - Analyze component structure
-3. **`cluster_biomarkers_by_factors(decomps)`** - Cluster biomarkers into modules
-4. **`visualize_group_comparison(analysis_results)`** - Create visualizations
-5. **`generate_analysis_report(decomps)`** - Comprehensive analysis report
+1. **`compare_factors_across_groups(decomps, top_n=10)`**
+   - Compares factor loadings across groups
+   - Computes group similarity matrices
+   - Identifies shared vs group-specific biomarkers
+   - Returns top biomarkers per component for each group
+
+2. **`analyze_component_structure(decomps, biomarker_names=None)`**
+   - Analyzes structure of each component within groups
+   - Identifies top positive/negative loadings
+   - Computes component magnitude and sparsity
+   - Returns detailed component analysis per group
+
+3. **`cluster_biomarkers_by_factors(decomps, n_clusters=5)`**
+   - Clusters biomarkers into modules based on loading patterns
+   - Uses K-means to identify biomarker modules
+   - Returns cluster assignments and characteristics
+
+4. **`visualize_group_comparison(analysis_results, biomarker_names=None, save_path=None)`**
+   - Creates similarity matrix heatmap
+   - Generates biomarker frequency bar chart
+   - Optionally saves figures to file
+
+5. **`generate_analysis_report(decomps, biomarker_names=None)`**
+   - Generates comprehensive analysis combining all functions
+   - Returns complete report dictionary with summary statistics
+
+6. **`print_analysis_summary(report, biomarker_names=None)`**
+   - Prints human-readable summary of analysis results
+   - Displays group similarities, top biomarkers, and shared patterns
 
 ## Notes
 
 - The model standardizes biomarker data within each biomarker for numerical stability
 - Missing values are filled with column means
-- The generative model uses SVD initialization for latent states
-- Tucker decomposition often works better than CP for symmetric 3D tensors
 - High reconstruction errors (>100%) are expected for moment tensors with low rank - consider increasing rank or using different decomposition methods
 
 ## License

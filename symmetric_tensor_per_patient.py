@@ -10,16 +10,10 @@ import numpy as np
 import pandas as pd
 from cumulant_tensor_model import parse_csf_data
 import warnings
-warnings.filterwarnings('ignore')
+import tensorly as tl
+from tensorly.decomposition import parafac, tucker
 
-# Import tensorly at module level
-try:
-    import tensorly as tl
-    from tensorly.decomposition import parafac, tucker
-    TENSORLY_AVAILABLE = True
-except ImportError:
-    TENSORLY_AVAILABLE = False
-    tl = None
+warnings.filterwarnings('ignore')
 
 
 def create_symmetric_3d_tensor_per_patient(X, mode='interaction', normalize=True):
@@ -78,28 +72,17 @@ def create_symmetric_3d_tensor_per_patient(X, mode='interaction', normalize=True
             for j in range(n_biomarkers):
                 for k in range(n_biomarkers):
                     for l in range(n_biomarkers):
-                        # Sum over basis vectors to create higher-rank tensor
-                        tensor_val = 0.0
-                        for m in range(n_basis):
-                            # Create basis tensor element
-                            basis_elem = (basis_vectors[j, m] * 
-                                         basis_vectors[k, m] * 
-                                         basis_vectors[l, m])
-                            # Weight by patient's projection onto this basis
-                            patient_proj = np.dot(x_i, basis_vectors[:, m])
-                            tensor_val += patient_proj * basis_elem
-                        
-                        # Add main interaction term
-                        main_term = deviation[j] * deviation[k] * deviation[l] * 0.1
-                        patient_tensors[i, j, k, l] = tensor_val + main_term
+                        tensor_val = sum(
+                            np.dot(x_i, basis_vectors[:, m]) * 
+                            basis_vectors[j, m] * basis_vectors[k, m] * basis_vectors[l, m]
+                            for m in range(n_basis)
+                        )
+                        patient_tensors[i, j, k, l] = tensor_val + deviation[j] * deviation[k] * deviation[l] * 0.1
             
-            # Make fully symmetric
-            patient_tensors[i] = (patient_tensors[i] + 
-                                 np.transpose(patient_tensors[i], (1, 2, 0)) +
-                                 np.transpose(patient_tensors[i], (2, 0, 1)) +
-                                 np.transpose(patient_tensors[i], (0, 2, 1)) +
-                                 np.transpose(patient_tensors[i], (1, 0, 2)) +
-                                 np.transpose(patient_tensors[i], (2, 1, 0))) / 6
+            patient_tensors[i] = sum(
+                np.transpose(patient_tensors[i], perm) 
+                for perm in [(0, 1, 2), (1, 2, 0), (2, 0, 1), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
+            ) / 6
         
         elif mode == 'outer_product':
             # Create fully symmetric tensor: x_i ⊗ x_i ⊗ x_i
@@ -157,9 +140,6 @@ def decompose_symmetric_3d_tensor(tensor_3d, rank=5, method='cp', tol=1e-6):
     result : dict
         Decomposition factors and metrics
     """
-    if not TENSORLY_AVAILABLE:
-        raise ImportError("tensorly is required. Install with: pip install tensorly")
-    
     T = tl.tensor(tensor_3d)
     tensor_norm = tl.norm(T)
     
