@@ -1,8 +1,5 @@
 """
 Manual Implementation of Alternating Least Squares (ALS) for CP Decomposition
-
-This script implements CP tensor decomposition using the ALS algorithm without
-relying on tensorly's built-in functions.
 """
 
 import numpy as np
@@ -21,7 +18,7 @@ def khatri_rao_product(matrices):
         List of matrices, each of shape (n_i, rank)
         
     Returns:
-    --------
+    -----------
     result : array
         Khatri-Rao product of shape (∏n_i, rank)
     """

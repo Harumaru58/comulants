@@ -1,7 +1,8 @@
 # Moment Tensor Decomposition
 
-A Python implementation for tensor decomposition of biomarker data using moment tensor decomposition:
+A Python/Julia implementation for tensor decomposition of biomarker data:
 - **Moment tensor decomposition**: 3rd and 4th-order empirical moment tensors for group-level analysis
+- **Constrained decomposition**: Riemannian optimization with ellipsoidal constraints (NEW!)
 
 ## Overview
 
@@ -12,11 +13,18 @@ This project provides tensor decomposition approaches for biomarker data:
 - Decomposes moment tensors to identify biomarker interaction patterns
 - Group-level analysis to compare disease states
 
+### Constrained Decomposition (NEW!)
+- **Riemannian optimization on ellipsoids**: Factor matrices constrained to ellipsoidal manifolds
+- **Biologically meaningful constraints**: Uses empirical biomarker covariance
+- **Julia implementation**: High-performance optimization on manifolds
+- See [RIEMANNIAN_OPTIMIZATION_GUIDE.md](RIEMANNIAN_OPTIMIZATION_GUIDE.md) for details
+
 ## Installation
 
 ### Prerequisites
 
 - Python 3.8 or higher
+- Julia 1.6 or higher (for constrained decomposition)
 - pip
 
 ### Setup
@@ -157,6 +165,72 @@ print_analysis_summary(report, biomarker_names)
 - **Biomarker modules**: Clusters of biomarkers that interact together
 - **Group similarities**: Which patient groups have similar biomarker patterns
 - **Component structure**: Which biomarkers drive each component in each group
+
+### Constrained Decomposition with Riemannian Optimization (NEW!)
+
+Perform CP decomposition with ellipsoidal constraints on factor matrices:
+
+**Install Julia dependencies:**
+```bash
+julia -e 'using Pkg; Pkg.add(["NPZ", "JSON"])'
+```
+
+**Run constrained decomposition:**
+```python
+from constrained_moments_decomposition import constrained_moments_decomposition
+
+results, biomarker_names = constrained_moments_decomposition(
+    filepath="data.xlsx",
+    rank=5,
+    confidence_level=2.0,  # 2-sigma confidence ellipsoid
+    use_julia=True,
+    verbose=True
+)
+```
+
+**What it does:**
+- Computes empirical covariance matrix for each patient group
+- Creates ellipsoidal constraints from biomarker covariance
+- Factor matrices constrained to lie on ellipsoids
+- Uses Riemannian optimization to stay on manifold
+
+**Why use constraints?**
+- **Biological plausibility**: Factors respect natural biomarker correlations
+- **Regularization**: Prevents overfitting, especially for small sample groups
+- **Interpretability**: Components represent biologically feasible combinations
+- **Group comparison**: How do different disease states respect biomarker structure?
+
+**Example results on your data:**
+```
+Group: CU_A-T-    Error: 1.1235  (32 samples)
+Group: AD_A+T+    Error: 0.3928  (47 samples)
+Group: CBS_A-T+   Error: 1.3889  (23 samples)
+Group: CBS-AD_A+T+ Error: 0.9802  (9 samples)
+```
+
+**Compare constrained vs unconstrained:**
+```python
+from constrained_moments_decomposition import compare_constrained_vs_unconstrained
+
+results_con, results_uncon = compare_constrained_vs_unconstrained(
+    filepath="data.xlsx",
+    rank=5
+)
+```
+
+**See full guide**: [RIEMANNIAN_OPTIMIZATION_GUIDE.md](RIEMANNIAN_OPTIMIZATION_GUIDE.md)
+
+**Julia standalone examples:**
+```bash
+# 2D ellipse optimization with visualization
+julia riemannian_ellipse.jl
+
+# n-dimensional ellipsoid optimization
+julia riemannian_ellipsoid.jl
+
+# Constrained CP decomposition
+julia constrained_cp_decomposition.jl
+```
 
 ## Data Format
 

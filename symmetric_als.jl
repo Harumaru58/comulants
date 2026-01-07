@@ -15,24 +15,7 @@ using Printf
 include("als_cp_dec.jl")
 
 """
-    symmetric_als_cp(tensor, rank; max_iter=1000, tol=1e-6, verbose=false)
-
 Symmetric CP decomposition where all factor matrices are constrained to be equal.
-
-# Arguments
-- `tensor`: N-way symmetric tensor (all dimensions must be equal)
-- `rank`: Rank of decomposition
-- `max_iter`: Maximum number of iterations
-- `tol`: Convergence tolerance (absolute change in error)
-- `verbose`: Whether to print progress
-
-# Returns
-- Named tuple containing:
-  - `factor`: Single factor matrix (d × rank)
-  - `reconstruction`: Reconstructed tensor
-  - `error`: Relative reconstruction error
-  - `n_iter`: Number of iterations
-  - `converged`: Whether algorithm converged
 """
 function symmetric_als_cp(tensor::Array, rank::Int; 
                          max_iter::Int=1000, tol::Float64=1e-6, 
@@ -121,9 +104,6 @@ end
 
 # Example usage
 if abspath(PROGRAM_FILE) == @__FILE__
-    println("Testing Symmetric ALS CP Decomposition")
-    println("=" ^ 50)
-    
     Random.seed!(42)
     
     # Create a symmetric 3-way tensor

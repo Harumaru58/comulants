@@ -11,29 +11,21 @@ data_by_groups = map(groups) do group
     D[idx, 6:end] |> Matrix{Float64}
 end
 
-# Verify data integrity
-println("Total rows: $(size(D, 1))")
-println("Sum of group rows: $(sum(size.(data_by_groups, 1)))")
-println("Groups found: $groups")
-println()
 
 # Process each group
 decomps = map(enumerate(data_by_groups)) do (group_idx, X)
     group_name = groups[group_idx]
-    println("Processing group $group_idx/$(length(groups)): $group_name")
     
     n = size(X, 1)
     n_features = size(X, 2)
     n_modes = 4  # 4th-order tensor
-    
-    println("  Data shape: ($n, $n_features)")
+
     
     # Mean-center
     mu = mean(X, dims=1)
     Xc = X .- mu
     
     # 4th-order empirical moments
-    println("  Computing 4th-order moment tensor...")
     iter = Iterators.product(1:n_features, 1:n_features, 1:n_features, 1:n_features)
     M = zeros(n_features, n_features, n_features, n_features)
     
@@ -52,8 +44,6 @@ decomps = map(enumerate(data_by_groups)) do (group_idx, X)
             end
         end
     end
-    
-    println("  Performing symmetric CP decomposition (rank=5)...")
     
     # Use symmetric ALS CP decomposition (all factors equal)
     result = symmetric_als_cp(M, 5; max_iter=1000, tol=1e-6, verbose=false)
@@ -80,9 +70,6 @@ decomps = map(enumerate(data_by_groups)) do (group_idx, X)
     )
 end
 
-println("=" ^ 60)
-println("Summary")
-println("=" ^ 60)
 for (idx, decomp) in enumerate(decomps)
     println("Group $(idx): $(decomp[:group])")
     println("  Error: $(round(decomp[:relative_error], digits=4))")
@@ -91,6 +78,4 @@ for (idx, decomp) in enumerate(decomps)
     println("  Component weights: $(round.(decomp[:weights], digits=2))")
     println()
 end
-
-println("Decomposition complete! Results stored in 'decomps' variable.")
 
