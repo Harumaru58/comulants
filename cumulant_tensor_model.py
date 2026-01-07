@@ -24,7 +24,7 @@ def parse_csf_data(csv_path=None):
         Patient metadata (Group, ApoE Pheno, sex, age, Sample)
     """
     if csv_path is None:
-        csv_path = "NIpanel_msclin_ATNsharp_20241205(1).csv"
+        csv_path = "data/NIpanel_msclin_ATNsharp_20241205(1).csv"
     
     # Read the header - it's split across two lines
     with open(csv_path, 'r', encoding='utf-8') as f:

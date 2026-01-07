@@ -17,7 +17,7 @@ import tempfile
 import os
 
 
-def load_biomarker_data(filepath="data.xlsx", sheet_name="ATN_sharp"):
+def load_biomarker_data(filepath="data/data.xlsx", sheet_name="ATN_sharp"):
     """Load biomarker data from Excel file."""
     df = pd.read_excel(filepath, sheet_name=sheet_name)
 
@@ -186,7 +186,7 @@ println("Saved results to: ", output_prefix * "_factors.npz")
 
 
 def constrained_moments_decomposition(
-    filepath="data.xlsx",
+    filepath="data/data.xlsx",
     sheet_name="ATN_sharp",
     rank=5,
     confidence_level=2.0,

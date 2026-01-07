@@ -70,7 +70,7 @@ def decompose_tensor(M, rank=5):
     }
 
 
-def main(filepath="data.xlsx", sheet_name="ATN_sharp", rank=5):
+def main(filepath="data/data.xlsx", sheet_name="ATN_sharp", rank=5):
     """Main function to compute 4th-order moments and decompose."""
     # Read data
     try:
