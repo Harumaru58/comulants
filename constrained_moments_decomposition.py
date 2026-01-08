@@ -270,7 +270,7 @@ def constrained_moments_decomposition(
             print("  Note: Python version runs unconstrained decomposition")
             print("  Use use_julia=True for constrained version")
 
-            from moments_3rd_order import decompose_tensor
+            from symmetry.moments_3rd_order import decompose_tensor
             decomp = decompose_tensor(M, rank=rank)
             decomp['group'] = group_name
             decomp['moment_tensor'] = M
@@ -315,7 +315,7 @@ def compare_constrained_vs_unconstrained(
     print("\nRunning UNCONSTRAINED decomposition...")
     print()
 
-    from moments_3rd_order import main as moments_3rd_main
+    from symmetry.moments_3rd_order import main as moments_3rd_main
     results_unconstrained = moments_3rd_main(filepath=filepath, rank=rank)
 
     # Compare

@@ -111,7 +111,7 @@ The `analyze_decomposition.py` script provides comprehensive analysis tools to i
 **Basic usage:**
 ```python
 from analyze_decomposition import generate_analysis_report, print_analysis_summary
-from moments_3rd_order import main as moments_3rd_main
+from symmetry.moments_3rd_order import main as moments_3rd_main
 
 # Run decomposition
 decomps = moments_3rd_main(rank=5)
