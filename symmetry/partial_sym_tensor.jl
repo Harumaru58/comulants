@@ -84,6 +84,6 @@ end
 # Execute the function
 using .MomentTensorConstruction
 
-T, groups = construct_third_moment_tensor("data.xlsx")
+T, groups = construct_third_moment_tensor("data/data.xlsx")
 println("\nGroups found: ", groups)
 println("Tensor shape: ", size(T))
